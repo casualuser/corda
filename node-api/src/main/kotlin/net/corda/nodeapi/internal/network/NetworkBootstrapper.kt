@@ -16,6 +16,7 @@ import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.internal.SerializationEnvironmentImpl
 import net.corda.core.serialization.internal._contextSerializationEnv
+import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.days
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.seconds
@@ -27,6 +28,7 @@ import net.corda.serialization.internal.CordaSerializationMagic
 import net.corda.serialization.internal.SerializationFactoryImpl
 import net.corda.serialization.internal.amqp.AbstractAMQPSerializationScheme
 import net.corda.serialization.internal.amqp.amqpMagic
+import org.slf4j.Logger
 import java.io.InputStream
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
@@ -66,6 +68,8 @@ internal constructor(private val initSerEnv: Boolean,
                 "corda.jar",
                 "--just-generate-node-info"
         )
+
+        private val logger: Logger by lazy { contextLogger() }
 
         private const val LOGS_DIR_NAME = "logs"
 
@@ -154,6 +158,12 @@ internal constructor(private val initSerEnv: Boolean,
 
     /** Entry point for the tool */
     fun bootstrap(directory: Path, copyCordapps: Boolean) {
+        logger.debug("Debugging message")
+        logger.trace("Trace message")
+        logger.info("Info message")
+        logger.warn("Warn message")
+        logger.error("Error message")
+
         // Don't accidently include the bootstrapper jar as a CorDapp!
         val bootstrapperJar = javaClass.location.toPath()
         val cordappJars = directory.list { paths ->

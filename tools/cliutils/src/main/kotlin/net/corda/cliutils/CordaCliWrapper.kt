@@ -4,8 +4,8 @@ import net.corda.core.internal.rootMessage
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.loggerFor
 
-import org.apache.logging.log4j.Level
 import org.fusesource.jansi.AnsiConsole
+import org.slf4j.event.Level
 import picocli.CommandLine
 import picocli.CommandLine.*
 import kotlin.system.exitProcess
@@ -104,7 +104,9 @@ fun CordaCliWrapper.start(args: Array<String>) {
         commandListHeading = "%n@|bold,underline Commands|@:%n%n")
 abstract class CordaCliWrapper(val alias: String, val description: String) : Callable<Int> {
     companion object {
-        private val logger by lazy { loggerFor<CordaCliWrapper>() }
+        private val logger by lazy {
+            System.out.println("Lazy Logging")
+            contextLogger() }
     }
 
     // Raw args are provided for use in logging - this is a lateinit var rather than a constructor parameter as the class
@@ -127,7 +129,8 @@ abstract class CordaCliWrapper(val alias: String, val description: String) : Cal
     // This needs to be called before loggers (See: NodeStartup.kt:51 logger called by lazy, initLogging happens before).
     // Node's logging is more rich. In corda configurations two properties, defaultLoggingLevel and consoleLogLevel, are usually used.
     open fun initLogging() {
-        val loggingLevel = loggingLevel.name().toLowerCase(Locale.ENGLISH)
+        System.out.println("Initialising Logging")
+        val loggingLevel = loggingLevel.name.toLowerCase(Locale.ENGLISH)
         System.setProperty("defaultLogLevel", loggingLevel) // These properties are referenced from the XML config file.
         if (verbose) {
             System.setProperty("consoleLogLevel", loggingLevel)
@@ -140,18 +143,19 @@ abstract class CordaCliWrapper(val alias: String, val description: String) : Cal
 
     override fun call(): Int {
         initLogging()
-        logger.info("Application Args: ${args.joinToString(" ")}")
+        //logger.info("Application Args: ${args.joinToString(" ")}")
         installShellExtensionsParser.installOrUpdateShellExtensions(alias, this.javaClass.name)
-        return runProgram()
+        val exitCode = runProgram()
+        return exitCode
     }
 }
 
 /**
- * Converter from String to log4j logging Level.
+ * Converter from String to slf4j logging Level.
  */
 class LoggingLevelConverter : ITypeConverter<Level> {
     override fun convert(value: String?): Level {
-        return value?.let { Level.getLevel(it) }
+        return value?.let { Level.valueOf(it) }
                 ?: throw TypeConversionException("Unknown option for --logging-level: $value")
     }
 
